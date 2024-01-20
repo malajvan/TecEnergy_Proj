@@ -1,4 +1,20 @@
-CREATE TABLE IF NOT EXISTS numbers (
-    number BIGINT,
-    timestamp BIGINT
+CREATE TABLE tw_data (
+    id SERIAL PRIMARY KEY, 
+    "Loc" INT,
+    "Loc Zn" VARCHAR(50),
+    "Loc Name" VARCHAR(50),
+    "Loc Purp Desc" VARCHAR(2),
+    "Loc/QTI" VARCHAR(5),
+    "Flow Ind" VARCHAR(1),
+    "DC" INTEGER,
+    "OPC" INTEGER,
+    "TSQ" INTEGER,
+    "OAC" INTEGER,
+    "IT" VARCHAR(1),
+    "Auth Overrun Ind" VARCHAR(1),
+    "Nom Cap Exceed Ind" VARCHAR(1),
+    "All Qty Avail" VARCHAR(1),
+    "Qty Reason" VARCHAR(200),
+    "Date" DATE,
+    "Cycle" VARCHAR(10)
 );
