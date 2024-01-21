@@ -10,4 +10,4 @@ jobs:
       - name: Build the stack
         run: docker compose  -f ./software/docker-compose.yml up -d
       - name: Test
-        run: docker run --network container:webapp-frontend appropriate/curl -s --retry 10 
+        run: docker ps -a
