@@ -50,7 +50,7 @@ def check_database():
     # Check if connection successfully established
     try:
         conn = engine.connect()
-        logging.info("Connection to database is correct")
+        logging.info("Connected to the database")
         conn.close()
     except Exception as e:
         logging.exception("Connection error")
@@ -142,51 +142,9 @@ def extract_data():
                 )
 
 
-def validate(df):
-    """
-    Parse and validate downloaded CSVs. Check if file is empty, rows and columns follow the constraints.
-    Return True if CSV is validated, False if there's an error. This error will be logged in the log file.
-    """
-    # check number of columns match (15)
-    if df.shape[1] != 15:
-        logging.warning(
-            f"Number of columns does not match. Expected 15, got {df.shape[1]}"
-        )
-        return False
-
-    # check if column names match
-    column_names = {
-        "Loc": "int64",
-        "Loc Zn": "object",
-        "Loc Name": "object",
-        "Loc Purp Desc": ["M2","MQ"],
-        "Loc/QTI": ["RPQ", "DPQ"],
-        "Flow Ind": ["R","D"],
-        "DC": "int64",
-        "OPC": "int64",
-        "TSQ": "int64",
-        "OAC": "int64",
-        "IT": ["Y","N"],
-        "Auth Overrun Ind": ["Y","N"],
-        "Nom Cap Exceed Ind": ["Y","N"],
-        "All Qty Avail": ["Y","N"],
-        "Qty Reason": "object",
-    }
-
-    for col in df.columns:
-        if col not in column_names:
-            logging.warning(f"Column '{col}' not in the expected list of columns.")
-            return False
-        # check type:
-        if type(column_names[col]) == list:
-            if df[col].unique() not in column_names[col]
-
-    return True
-
-
 def load():
     """
-    Insert validated CSVs into the database. Add necessary columns:
+    Validate CSVs and load them into the database. Add necessary columns:
     1. Date
     2. Cycle
     """
@@ -194,27 +152,75 @@ def load():
     csv_files_path = f"./data/OAC_TW_007933047_*.csv"
     csv_files = glob.glob(csv_files_path)
     dfs = []
+
     for csv_file in csv_files:
-        logging.info(f"Loading {csv_file}...")
-        df = pd.read_csv(csv_file)
-        # Check if csv is empty:
-        if df.shape[0] == 0:
-            logging.warning(f"File {csv_file} is empty. Skipping...")
+        try:
+            logging.info(f"Loading {csv_file}...")
+
+            # loading csv into df, also converting bad types to NaN
+            df = pd.read_csv(
+                csv_file,
+                dtype={
+                    "Loc": pd.Int64Dtype,
+                    "Loc Zn": str,
+                    "Loc Name": str,
+                    "Loc Purp Desc": str,
+                    "Loc/QTI": str,
+                    "Flow Ind": str,
+                    "DC": pd.Int64Dtype,
+                    "OPC": pd.Int64Dtype,
+                    "TSQ": pd.Int64Dtype,
+                    "OAC": pd.Int64Dtype,
+                    "IT": str,
+                    "Auth Overrun Ind": str,
+                    "Nom Cap Exceed Ind": str,
+                    "All Qty Avail": str,
+                    "Qty Reason": str,
+                },
+            )
+            # Check if CSV is empty:
+            if df.shape[0] == 0:
+                logging.warning(f"File {csv_file} is empty. Skipping...")
+                continue
+
+            # Validate the dataframe columns
+            # check number of columns match (15)
+            if df.shape[1] != 15:
+                logging.warning(
+                    f"File {csv_file} has {df.shape[1]} columns, expecting 15. Skipping..."
+                )
+                continue
+
+            # check if column names match. There are specific values expected for these columns. See more here, under "Legend": https://twtransfer.energytransfer.com/ipost/TW/capacity/operationally-available#modal-oacInfo
+            column_names = {
+                "Loc Purp Desc": ["M2", "MQ"],
+                "Loc/QTI": ["RPQ", "DPQ"],
+                "Flow Ind": ["R", "D"],
+                "IT": ["Y", "N"],
+                "Auth Overrun Ind": ["Y", "N"],
+                "Nom Cap Exceed Ind": ["Y", "N"],
+                "All Qty Avail": ["Y", "N"],
+            }
+
+            # Changing invalid values to NaN
+            df = df.apply(
+                lambda x: x.where(x.isin(column_names[x.name]))
+                if x.name in column_names
+                else x
+            )
+
+            df["Date"] = csv_file.split("_")[-2]
+            df["Cycle"] = csv_file.split("_")[-1].replace(".csv", "")
+            dfs.append(df)
+        except Exception as e:
+            logging.exception(f"Failed to validate {csv_file}. skipping")
             continue
 
-        # Validate the dataframe columns
-        if not validate(df):
-            logging.error(", file {csv_file} is not valid. Skipping...")
-            continue
-            # TODO: more specific error handling (rows/columns, error etc)
-
-        df["Date"] = csv_file.split("_")[-2]
-        df["Cycle"] = csv_file.split("_")[-1].replace(".csv", "")
-        dfs.append(df)
-
+    # Concat dataframes and load into database
     combined_df = pd.concat(dfs, ignore_index=True)
     combined_df.to_sql(table_name, engine, if_exists="append", index=False)
     logging.info("Finished loading to database")
+    # TODO: Handle NaN values better
 
     # Clean up all loaded files
     for csv_file in csv_files:
