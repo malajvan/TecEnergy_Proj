@@ -31,7 +31,7 @@ cycles = {
     3: "Intraday 1",
     4: "Intraday 2",
     7: "Intraday 3",
-    5: "Final",
+    5: "Final"
 }
 current_date = datetime.now(timezone("EST"))
 
@@ -153,9 +153,10 @@ def load():
     csv_files = glob.glob(csv_files_path)
     dfs = []
 
+    #TODO: optimize time for this
     for csv_file in csv_files:
         try:
-            logging.info(f"Loading {csv_file}...")
+            logging.info(f"Validating {csv_file}...")
 
             # loading csv into df, also converting bad types to NaN
             df = pd.read_csv(
@@ -209,17 +210,27 @@ def load():
                 else x
             )
 
+            # saving Y/N response for columns to boolean
+            for col in ["IT","Auth Overrun Ind","Nom Cap Exceed Ind","All Qty Avail"]:
+                df[col] = df[col].map({"Y": True, "N":False})
+
             df["Date"] = csv_file.split("_")[-2]
             df["Cycle"] = csv_file.split("_")[-1].replace(".csv", "")
             dfs.append(df)
+            
         except Exception as e:
             logging.exception(f"Failed to validate {csv_file}. skipping")
             continue
 
     # Concat dataframes and load into database
+    logging.info("Loading validated CSVs...")
+    if len(dfs)==0:
+        logging.warning("No data to load... End loading process")
+        return 
+        
     combined_df = pd.concat(dfs, ignore_index=True)
     combined_df.to_sql(table_name, engine, if_exists="append", index=False)
-    logging.info("Finished loading to database")
+    logging.info("Finished loading.")
     # TODO: Handle NaN values better
 
     # Clean up all loaded files
@@ -229,12 +240,13 @@ def load():
 
 
 if __name__ == "__main__":
+    logging.info("")
+    logging.info("=========================")
     logging.info(
         f"Starting the process. Today is {current_date.strftime('%m/%d/%Y')}. Downloading data of the last three days."
     )
     check_database()
     extract_data()
     load()
-    logging.info("Finished process. Shutting down...")
-    while True:
-        pass
+    logging.info("Finished process. Have a good day :)")
+
