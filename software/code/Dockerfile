@@ -3,5 +3,6 @@ WORKDIR /code
 ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 RUN mkdir data
+RUN mkdir logs
 COPY EL.py EL.py
 CMD ["python", "-u", "EL.py"]

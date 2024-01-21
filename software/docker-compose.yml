@@ -5,6 +5,8 @@ services:
     depends_on: 
      db:
       condition: service_healthy
+    volumes:
+      - ./code/logs:/code/logs
   db:
     build: ./db/
     healthcheck:

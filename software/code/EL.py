@@ -7,7 +7,7 @@ import csv
 import requests
 import glob
 import os
-
+import logging
 
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
@@ -35,6 +35,13 @@ cycles = {
 }
 current_date = datetime.now(timezone("EST"))
 
+# Define logging param
+logging.basicConfig(
+    level=logging.INFO,
+    filename="./logs/app.log",
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+
 
 def check_database():
     """
@@ -43,10 +50,10 @@ def check_database():
     # Check if connection successfully established
     try:
         conn = engine.connect()
-        print("LOG: Connection to database is correct")
+        logging.info("Connection to database is correct")
         conn.close()
     except Exception as e:
-        print(f"ERROR: Connection error: {e}")
+        logging.exception("Connection error")
 
     # Check if the table is in the DB
     with engine.connect() as conn:
@@ -54,13 +61,11 @@ def check_database():
             tb_check = text("SELECT EXISTS (SELECT * FROM tw_data);")
             res = conn.execute(tb_check).all()
             if res:
-                print("LOG: Table is initialize correctly")
+                logging.info("Table is initialized correctly")
             else:
-                print(
-                    "WARNING: Table doesn't exist, please check initialization process and database connections. Otherwise, table will be created later"
-                )
+                logging.warning("Table doesn't exist, please check initialization process and database connections. Otherwise, table will be created later")
         except Exception as e:
-            print(f"Connection error: {e}")
+            logging.exception(f"Connection error")
 
 
 def check_if_downloaded(date, cycle):
@@ -100,7 +105,7 @@ def extract_data():
     for date in date_list:
         # Get data from API
         date = date.strftime("%m/%d/%Y")
-        print(date)
+        logging.info('')
         url = "https://twtransfer.energytransfer.com/ipost/capacity/operationally-available"
         for cycle in cycles:
             if not check_if_downloaded(date, cycles[cycle]):
@@ -124,24 +129,27 @@ def extract_data():
                 if response.status_code == 200:
                     with open(output_file, "wb") as file:
                         file.write(response.content)
-                    print(f"LOG: {output_file} downloaded successfully.")
+                    logging.info(f"{output_file} downloaded successfully.")
                 else:
-                    print(
+                    logging.error(
                         f"ERROR: Failed to download file. Status code: {response.status_code}"
                     )
             else:
-                print(
-                    f"LOG: Data for cycle '{cycles[cycle]}' of {date} is already downloaded. skipping..."
-                )
+                logging.info(f"Data for cycle '{cycles[cycle]}' of {date} is already in the database. skipping...")
 
 
-def validate(csv):
+def validate(df):
     """
     Parse and validate downloaded CSVs. Check if file is empty, rows and columns follow the constraints.
     Return True if CSV is validated, False if there's an error. This error will be logged in the log file.
     """
-    pass
-
+    # check number of columns match (15)
+    if df.shape[1] != 15:
+        logging.warning(
+            f"Number of columns does not match. Expected 15, got {df.shape[1]}"
+        )
+        return False
+    return True
 
 def load():
     """
@@ -154,33 +162,38 @@ def load():
     csv_files = glob.glob(csv_files_path)
     dfs = []
     for csv_file in csv_files:
-        #
-        # if not parse_and_validate(csv_file):
-        #     print(f"Error, file {csv_file} is not validated. For more information, check the log file...")
-        #     continue
-        #     # TODO: more specific error handling (rows/columns, error etc)
+        logging.info(f"Loading {csv_file}...")
         df = pd.read_csv(csv_file)
+        # Check if csv is empty:
+        if df.shape[0] == 0:
+            logging.warning(f"File {csv_file} is empty. Skipping...")
+            continue
+
+        # Validate the dataframe columns
+        if not validate(df):
+            logging.error(", file {csv_file} is not valid. Skipping...")
+            continue
+            # TODO: more specific error handling (rows/columns, error etc)
+        
         df["Date"] = csv_file.split("_")[-2]
         df["Cycle"] = csv_file.split("_")[-1].replace(".csv", "")
         dfs.append(df)
 
     combined_df = pd.concat(dfs, ignore_index=True)
     combined_df.to_sql(table_name, engine, if_exists="append", index=False)
-    print("LOG: Finished loading to database")
+    logging.info("Finished loading to database")
 
     # Clean up all loaded files
     for csv_file in csv_files:
-        print("LOG: Deleting files from filesystem")
+        logging.info("Deleting files from filesystem")
         os.remove(csv_file)
 
 
 if __name__ == "__main__":
-    print(
-        f"LOG: Starting the process. Today is {current_date.strftime('%m/%d/%Y')}. Downloading data of the last three days."
-    )
+    logging.info(f"Starting the process. Today is {current_date.strftime('%m/%d/%Y')}. Downloading data of the last three days.")
     check_database()
     extract_data()
     load()
-    print("LOG: Finished process. Shutting down...")
-
-
+    logging.info("Finished process. Shutting down...")
+    while True:
+        pass
