@@ -8,6 +8,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build the stack
-        run: docker compose up -d
+        run: docker compose up -f ./software/docker-compose.yml -d
       - name: Test
         run: docker run --network container:webapp-frontend appropriate/curl -s --retry 10 
