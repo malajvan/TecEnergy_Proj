@@ -1,4 +1,4 @@
-name: Run Tests
+name: Unit Testing
 
 on: 
   push:
@@ -27,4 +27,4 @@ jobs:
 
     - name: Run tests
       run: |
-        python -m unittest discover  # Replace with the actual command to run your tests
+        python -m unittest discover software/code/tests
