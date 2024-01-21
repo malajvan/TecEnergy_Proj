@@ -63,7 +63,9 @@ def check_database():
             if res:
                 logging.info("Table is initialized correctly")
             else:
-                logging.warning("Table doesn't exist, please check initialization process and database connections. Otherwise, table will be created later")
+                logging.warning(
+                    "Table doesn't exist, please check initialization process and database connections. Otherwise, table will be created later"
+                )
         except Exception as e:
             logging.exception(f"Connection error")
 
@@ -105,7 +107,7 @@ def extract_data():
     for date in date_list:
         # Get data from API
         date = date.strftime("%m/%d/%Y")
-        logging.info('')
+        logging.info("")
         url = "https://twtransfer.energytransfer.com/ipost/capacity/operationally-available"
         for cycle in cycles:
             if not check_if_downloaded(date, cycles[cycle]):
@@ -135,7 +137,9 @@ def extract_data():
                         f"ERROR: Failed to download file. Status code: {response.status_code}"
                     )
             else:
-                logging.info(f"Data for cycle '{cycles[cycle]}' of {date} is already in the database. skipping...")
+                logging.info(
+                    f"Data for cycle '{cycles[cycle]}' of {date} is already in the database. skipping..."
+                )
 
 
 def validate(df):
@@ -149,7 +153,36 @@ def validate(df):
             f"Number of columns does not match. Expected 15, got {df.shape[1]}"
         )
         return False
+
+    # check if column names match
+    column_names = {
+        "Loc": "int64",
+        "Loc Zn": "object",
+        "Loc Name": "object",
+        "Loc Purp Desc": ["M2","MQ"],
+        "Loc/QTI": ["RPQ", "DPQ"],
+        "Flow Ind": ["R","D"],
+        "DC": "int64",
+        "OPC": "int64",
+        "TSQ": "int64",
+        "OAC": "int64",
+        "IT": ["Y","N"],
+        "Auth Overrun Ind": ["Y","N"],
+        "Nom Cap Exceed Ind": ["Y","N"],
+        "All Qty Avail": ["Y","N"],
+        "Qty Reason": "object",
+    }
+
+    for col in df.columns:
+        if col not in column_names:
+            logging.warning(f"Column '{col}' not in the expected list of columns.")
+            return False
+        # check type:
+        if type(column_names[col]) == list:
+            if df[col].unique() not in column_names[col]
+
     return True
+
 
 def load():
     """
@@ -174,7 +207,7 @@ def load():
             logging.error(", file {csv_file} is not valid. Skipping...")
             continue
             # TODO: more specific error handling (rows/columns, error etc)
-        
+
         df["Date"] = csv_file.split("_")[-2]
         df["Cycle"] = csv_file.split("_")[-1].replace(".csv", "")
         dfs.append(df)
@@ -190,7 +223,9 @@ def load():
 
 
 if __name__ == "__main__":
-    logging.info(f"Starting the process. Today is {current_date.strftime('%m/%d/%Y')}. Downloading data of the last three days.")
+    logging.info(
+        f"Starting the process. Today is {current_date.strftime('%m/%d/%Y')}. Downloading data of the last three days."
+    )
     check_database()
     extract_data()
     load()
