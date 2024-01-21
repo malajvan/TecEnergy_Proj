@@ -1,9 +1,6 @@
 name: Unit Testing
 
-on: 
-  push:
-    branches:
-     - test_act
+on: push
 
 
 jobs:
