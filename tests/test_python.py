@@ -1,12 +1,6 @@
 import unittest
 from software.code.EL import *
 
-
-# class TestHello(unittest.TestCase):
-#     def test_say_hello(self):
-#         result = say_hello()
-#         self.assertEqual(result, "Hello, World!")
-
 #TODO: write unittest. 
 class TestEL(unittest.TestCase):
     def test_file_download(self):
