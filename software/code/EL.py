@@ -218,7 +218,7 @@ def load():
             dfs.append(df)
             
         except Exception as e:
-            logging.exception(f"Failed to validate {csv_file}. skipping")
+            logging.exception(f"Failed to validate {csv_file}. Please check this file again. skipping")
             continue
 
     # Concat dataframes and load into database
