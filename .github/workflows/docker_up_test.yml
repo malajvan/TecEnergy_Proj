@@ -1,4 +1,4 @@
-name: Docker Compose Actions Workflow
+name: Docker and PSQL Test
 
 on: push
 
@@ -11,3 +11,5 @@ jobs:
         run: docker compose  -f ./software/docker-compose.yml up -d
       - name: Test
         run: docker ps -a
+      - name: Test database table initialization
+        run: docker exec -it $(docker container ls -aqf "name=software-db-1") psql -U postgres -d TW_op_avail -c "SELECT column_name FROM information_schema.columns WHERE table_name = 'tw_data'"
