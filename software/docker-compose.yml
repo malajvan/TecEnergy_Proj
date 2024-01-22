@@ -6,7 +6,9 @@ services:
      db:
       condition: service_healthy
     volumes:
-      - ./code/logs:/code/logs
+      - ./code/app.log:/code/app.log
+      - ./code/EL.py:/code/EL.py
+  
   db:
     build: ./db/
     healthcheck:

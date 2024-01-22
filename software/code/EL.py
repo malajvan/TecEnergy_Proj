@@ -38,7 +38,7 @@ current_date = datetime.now(timezone("EST"))
 # Define logging param
 logging.basicConfig(
     level=logging.INFO,
-    filename="./logs/app.log",
+    filename="./app.log",
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
@@ -127,7 +127,6 @@ def extract_data():
                 output_file = f"./data/OAC_TW_007933047_{date_f}_{cycle_f}.csv"
 
                 response = requests.get(url, params=params)
-
                 if response.status_code == 200:
                     with open(output_file, "wb") as file:
                         file.write(response.content)
