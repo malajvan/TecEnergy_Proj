@@ -3,9 +3,9 @@ CREATE TABLE tw_data (
     "Loc" INT,
     "Loc Zn" VARCHAR(50),
     "Loc Name" VARCHAR(50),
-    "Loc Purp Desc" VARCHAR(2),
-    "Loc/QTI" VARCHAR(5),
-    "Flow Ind" VARCHAR(1),
+    "Loc Purp Desc" VARCHAR(2) CHECK ("Loc Purp Desc" IN ('M2', 'MQ')),
+    "Loc/QTI" VARCHAR(3) CHECK ("Loc/QTI" IN ('RPQ', 'DPQ')),
+    "Flow Ind" VARCHAR(1) CHECK ("Flow Ind" IN ('R', 'D')),
     "DC" INTEGER,
     "OPC" INTEGER,
     "TSQ" INTEGER,
@@ -16,5 +16,5 @@ CREATE TABLE tw_data (
     "All Qty Avail" BOOLEAN,
     "Qty Reason" VARCHAR(200),
     "Date" DATE,
-    "Cycle" VARCHAR(10)
+    "Cycle" VARCHAR(10) CHECK ("Cycle" IN ('Timely', 'Evening', 'Intraday 1','Intraday 2', 'Intraday 3', 'Final'))
 );
