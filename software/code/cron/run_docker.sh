@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Start the python app container to run the process
-$(which docker) start software-app-1
+sudo $(which docker) start software-app-1
 
 
-### Setting up cron job (everyday): 
+### Setting up cron job (everyday at 9am): 
 ### crontab -e
-### 0 0 * * * /path/to/run_docker.sh 
+### 0 9 * * * /path/to/run_docker.sh 
