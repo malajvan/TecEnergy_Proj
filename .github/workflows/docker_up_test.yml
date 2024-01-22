@@ -12,4 +12,4 @@ jobs:
       - name: Test
         run: docker ps -a
       - name: Test database table initialization
-        run: docker exec -it $(docker container ls -aqf "name=software-db-1") psql -U postgres -d TW_op_avail -c "SELECT column_name FROM information_schema.columns WHERE table_name = 'tw_data'"
+        run: docker exec -t $(docker container ls -aqf "name=software-db-1") psql -U postgres -d TW_op_avail -c "SELECT column_name FROM information_schema.columns WHERE table_name = 'tw_data'"
