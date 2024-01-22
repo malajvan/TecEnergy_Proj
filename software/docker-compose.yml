@@ -7,7 +7,6 @@ services:
       condition: service_healthy
     volumes:
       - ./code/app.log:/code/app.log
-      - ./code/EL.py:/code/EL.py
   
   db:
     build: ./db/
