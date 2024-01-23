@@ -38,7 +38,8 @@ You'll need to install Docker to run this app. Follow the official instructions 
 1. Clone this repo
    
    ```
-   git clone https://github.com/malajvan/TecEnergy_Proj/```
+   git clone https://github.com/malajvan/TecEnergy_Proj/
+   ```
 2. Make sure Docker is running
    ```
    docker -v
@@ -46,7 +47,7 @@ You'll need to install Docker to run this app. Follow the official instructions 
 3. Building and running
    ```
    # get to the correct directory
-   cd TechEnergy_proj/software
+   cd TecEnergy_Proj/software
    
    # build and run containers
    sudo docker compose up
