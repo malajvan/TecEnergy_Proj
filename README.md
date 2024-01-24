@@ -29,6 +29,8 @@ Main stack:
 - PostgreSQL
 - Docker
 
+![diagram-export-1-23-2024-9_14_48-PM](https://github.com/malajvan/TecEnergy_Proj/assets/64571718/a273122a-16c4-4d4a-9154-a8a6c0e5ab49)
+
 
 ## Getting Started
 Quick-start guide to setup an instance of this software.  
